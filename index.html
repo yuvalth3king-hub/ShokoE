@@ -266,6 +266,7 @@ body{
 <script type="text/plain" id="core">
 const KN=[[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]],KG=[[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]],DG=[[-1,-1],[-1,1],[1,-1],[1,1]],ST=[[-1,0],[1,0],[0,-1],[0,1]];
 const isW=p=>p>='A'&&p<='Z',inB=(r,c)=>r>=0&&r<8&&c>=0&&c<8;
+
 class Pos{
  constructor(){this.b=["rnbqkbnr","pppppppp","        ","        ","        ","        ","PPPPPPPP","RNBQKBNR"].map(s=>s.split(''));this.w=true;this.cs=[1,1,1,1];this.ep=null}
  static from(d){const p=new Pos();p.b=d.b.map(r=>r.slice());p.w=d.w;p.cs=d.cs.slice();p.ep=d.ep;return p}
@@ -312,6 +313,7 @@ class Pos{
  legal(){return this.gen(true)}
  pseudoAll(){return this.gen(false)}
 }
+
 const MATE=1e5,INF=1e6,V={p:100,n:320,b:330,r:500,q:900,k:0},val=p=>V[p.toLowerCase()]||0;
 const same=(a,b)=>a&&b&&a.fr===b.fr&&a.fc===b.fc&&a.tr===b.tr&&a.tc===b.tc&&a.pr===b.pr;
 const ZR=(()=>{let x=123456789;const r=()=>{x^=x<<13;x^=x>>>17;x^=x<<5;return x>>>0};const z=[];for(let i=0;i<800;i++)z.push([r(),r()]);return z})();
@@ -321,9 +323,10 @@ function hash(pos){let a=0,b=0;for(let r=0;r<8;r++)for(let c=0;c<8;c++){const p=
  for(let i=0;i<4;i++)if(pos.cs[i]){a^=ZR[769+i][0];b^=ZR[769+i][1]}
  if(pos.ep){a^=ZR[774+pos.ep[1]][0];b^=ZR[774+pos.ep[1]][1]}
  return(a>>>0)*2097152+((b>>>0)&0x1FFFFF)}
+
 class Srch{
- constructor(){this.n=0;this.stop=false;this.kil=[]}
- run(pos,elo,bril){
+ constructor(){this.n=0;this.stop=false;this.kil=[];this.hist=Array.from({length:2},()=>Array.from({length:64},()=>Array(64).fill(0)))}
+  run(pos,elo,bril){
   const dm=elo<=1700?3:elo<=1900?4:elo<=2100?5:elo<=2300?6:elo<=2500?8:12,tm=elo<=1700?400:elo<=1900?800:elo<=2100?1500:elo<=2300?2500:elo<=2500?4000:6000;
   const moves=pos.legal(),res={move:null,score:0,brilliant:false};if(!moves.length)return res;
   if(TT.size>400000)TT.clear();this.dl=Date.now()+tm;let best=moves[0],bs=0,done=0;
@@ -349,20 +352,32 @@ class Srch{
    else s=-this.nega(c,d-1,-be,-al,ply+1);
    if(this.stop)return 0;
    if(s>=be){if(ply<100&&q&&!same(m,(this.kil[ply]||[])[0]))this.kil[ply]=[m,(this.kil[ply]||[])[0]];
+    if(q)this.hist[w?1:0][m.fr*8+m.fc][m.tr*8+m.tc]=Math.min(20000,this.hist[w?1:0][m.fr*8+m.fc][m.tr*8+m.tc]+d*d);
     if(Math.abs(s)<MATE-100)TT.set(h,{d,s,f:1,m});return be}
    if(s>al){al=s;bm=m}}
   if(!legal)return ic?-MATE+ply:0;
   if(Math.abs(al)<MATE-100)TT.set(h,{d,s:al,f:al>a0?0:2,m:bm});
   return al}
- qs(pos,al,be,ply){if(this.tick())return 0;const st=this.ev(pos);if(st>=be)return be;if(ply>40)return st;if(st>al)al=st;
-  const w=pos.w,ms=pos.pseudoAll().filter(m=>this.cap(pos,m)||m.pr==='q');this.order(pos,ms,null,100);
-  for(const m of ms){const c=pos.copy();c.make(m);if(Pos.chk(c.b,w))continue;const s=-this.qs(c,-be,-al,ply+1);if(this.stop)return 0;if(s>=be)return be;if(s>al)al=s}
+ qs(pos,al,be,ply){
+  if(this.tick())return 0;
+  const w=pos.w,check=Pos.chk(pos.b,w);
+  let st=this.ev(pos);
+  if(!check){if(st>=be)return be;if(st>al)al=st;if(ply>40)return st}
+  else if(ply>80)return st;
+  const ms=pos.pseudoAll().filter(m=>check||this.cap(pos,m)||m.pr==='q');
+  this.order(pos,ms,null,100);
+  let legal=0;
+  for(const m of ms){const c=pos.copy();c.make(m);if(Pos.chk(c.b,w))continue;legal++;
+   const s=-this.qs(c,-be,-al,ply+1);if(this.stop)return 0;if(s>=be)return be;if(s>al)al=s}
+  if(check&&!legal)return -MATE+ply;
   return al}
  cap(pos,m){return pos.b[m.tr][m.tc]!==' '||(pos.b[m.fr][m.fc].toLowerCase()==='p'&&m.fc!==m.tc)}
  order(pos,ms,pv,ply){const sc=new Map();for(const m of ms)sc.set(m,this.ms(pos,m,pv,ply));ms.sort((a,b)=>sc.get(b)-sc.get(a))}
  ms(pos,m,pv,ply){if(pv&&same(m,pv))return 1e6;const mv=pos.b[m.fr][m.fc];let vi=pos.b[m.tr][m.tc];
   if(vi===' '&&mv.toLowerCase()==='p'&&m.fc!==m.tc)vi='p';let s=0;
-  if(vi!==' ')s=1e4+10*val(vi)-val(mv);else{const k=this.kil[ply];if(k){if(same(m,k[0]))s=9000;else if(same(m,k[1]))s=8000}}
+  if(vi!==' ')s=1e4+10*val(vi)-val(mv);
+  else{const k=this.kil[ply];if(k){if(same(m,k[0]))s=9000;else if(same(m,k[1]))s=8000}
+   s+=this.hist[pos.w?1:0][m.fr*8+m.fc][m.tr*8+m.tc]}
   if(m.pr)s+=val(m.pr);return s}
  passed(b,r,c,w){const en=w?'p':'P',dr=w?-1:1;for(let x=r+dr;x>=0&&x<8;x+=dr)for(let y=c-1;y<=c+1;y++)if(y>=0&&y<8&&b[x][y]===en)return false;return true}
  ev(pos){const b=pos.b;let sc=0,mat=0,wb=0,bb=0,wk=[0,0],bk=[0,0];
@@ -375,7 +390,7 @@ class Srch{
    sc+=w?v:-v}
   if(wb>=2)sc+=30;if(bb>=2)sc-=30;const eg=mat<2800;
   const ks=(k,w)=>{if(eg)return(Math.min(k[0],7-k[0])+Math.min(k[1],7-k[1]))*10;let s=-(w?7-k[0]:k[0])*20;if(k[1]<=2||k[1]>=6)s+=25;return s};
-  sc+=ks(wk,true)-ks(bk,false)+Math.floor(Math.random()*17)-8;return pos.w?sc:-sc}
+  sc+=ks(wk,true)-ks(bk,false);return pos.w?sc:-sc}
  sac(pos,m){if(m.pr)return false;const mv=pos.b[m.fr][m.fc],vi=pos.b[m.tr][m.tc],gain=vi===' '?0:val(vi),af=pos.copy();af.make(m);let worst=0;
   for(const cp of af.pseudoAll()){if(cp.tr!==m.tr||cp.tc!==m.tc)continue;const c2=af.copy();c2.make(cp);let loss=val(mv);
    if(c2.pseudoAll().some(x=>x.tr===m.tr&&x.tc===m.tc))loss-=val(pos.b[cp.fr][cp.fc]);if(loss>worst)worst=loss}
