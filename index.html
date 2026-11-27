@@ -9,29 +9,236 @@
 <meta name="theme-color" content="#262421">
 <title>ShokoEngine</title>
 <style>
-:root{--bg:#262421;--panel:#302E2B;--btn:#3D3A37;--ac:#81B64C;--tx:#E8E6E3;--mu:#9B9792;--sq:40px;--bs:calc(var(--sq)*8)}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;min-height:100%;background:var(--bg);color:var(--tx);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-#app{min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:calc(env(safe-area-inset-top) + 6px) 4px calc(env(safe-area-inset-bottom) + 6px)}
-.menu{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;width:min(100%,360px);gap:12px}
-.menu h1{font-size:34px;margin:0 0 2px}.menu p{margin:0 0 28px;color:var(--mu)}
-.btn{flex:1;height:44px;border:0;border-radius:10px;background:var(--btn);color:var(--tx);font:inherit;font-size:12px;cursor:pointer}
-.btn.p{background:var(--ac);color:#1b1b1b}.btn:active{filter:brightness(1.25)}
-.menu .btn{width:100%;flex:none;height:52px;font-size:16px}
-#game{display:none;flex-direction:column;align-items:center;width:var(--bs);gap:6px}
-.card{background:var(--panel);border-radius:10px;padding:9px 12px;text-align:center;width:calc(100% - 16px)}
-#info{color:var(--ac);font-size:14px;visibility:hidden}
-.row{display:flex;gap:6px;width:100%}
-#board{display:grid;grid-template-columns:repeat(8,var(--sq));grid-template-rows:repeat(8,var(--sq));width:var(--bs);height:var(--bs);flex:none;direction:ltr}
-.sq{width:var(--sq);height:var(--sq);overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;font-size:calc(var(--sq)*.74);line-height:1;user-select:none;cursor:pointer}
-.sq i{font-style:normal}.w{color:#fff;text-shadow:0 0 4px #000,0 0 2px #000}.b{color:#1a1a1a;text-shadow:0 0 4px #fff,0 0 2px #fff}
-.bd{position:absolute;top:3%;right:3%;width:38%;height:38%;border-radius:50%;background:#1BACA6;border:2px solid #fff;color:#fff;font:700 calc(var(--bs)/8*.24)/1 system-ui;display:flex;align-items:center;justify-content:center}
-.foot{margin-top:auto;padding-top:12px;background:var(--panel);border-radius:20px;padding:8px 16px;color:var(--mu);font-size:13px;margin-top:14px}
-.foot a{color:var(--ac);font-weight:700;text-decoration:none}
-#dlg{position:fixed;inset:0;background:#0009;display:none;align-items:center;justify-content:center;z-index:9}
-#dlg div{background:var(--panel);border-radius:14px;width:min(86vw,320px);padding:8px}
-#dlg h3{margin:8px 10px;font-size:15px}#dlg button{display:block;width:100%;text-align:left;padding:13px 12px;border:0;background:none;color:var(--tx);font:inherit;border-radius:8px}
-#dlg button:active{background:var(--btn)}
+:root{
+ --bg:#262421;
+ --panel:#302E2B;
+ --btn:#3D3A37;
+ --ac:#81B64C;
+ --tx:#E8E6E3;
+ --mu:#9B9792;
+ --sq:40px;
+ --bs:calc(var(--sq)*8);
+}
+
+*{
+ box-sizing:border-box;
+ -webkit-tap-highlight-color:transparent;
+}
+
+html,body{
+ margin:0;
+ min-height:100%;
+ background:var(--bg);
+ color:var(--tx);
+ font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+
+body{
+ background:
+  radial-gradient(ellipse at 50% 35%,#302E2B 0%,#262421 72%);
+}
+
+#app{
+ min-height:100dvh;
+ display:flex;
+ flex-direction:column;
+ align-items:center;
+ padding:calc(env(safe-area-inset-top) + 12px) 10px calc(env(safe-area-inset-bottom) + 10px);
+}
+
+.menu{
+ flex:1;
+ display:flex;
+ flex-direction:column;
+ justify-content:center;
+ align-items:center;
+ width:min(100%,360px);
+ gap:13px;
+}
+
+.menu h1{
+ font-size:36px;
+ font-weight:800;
+ letter-spacing:-1.2px;
+ margin:0;
+}
+
+.menu p{
+ margin:0 0 30px;
+ color:var(--mu);
+ font-size:14px;
+ letter-spacing:.3px;
+}
+
+.btn{
+ flex:1;
+ min-height:44px;
+ border:1px solid #ffffff0c;
+ border-radius:7px;
+ background:var(--btn);
+ color:var(--tx);
+ font:inherit;
+ font-size:12px;
+ font-weight:650;
+ cursor:pointer;
+ transition:background .15s,border-color .15s,transform .15s;
+}
+
+.btn.p{
+ background:var(--ac);
+ color:#1b1b1b;
+ border-color:transparent;
+}
+
+.btn:active{
+ transform:scale(.98);
+ filter:brightness(1.12);
+}
+
+.menu .btn{
+ width:100%;
+ flex:none;
+ height:52px;
+ font-size:15px;
+ letter-spacing:.2px;
+}
+
+#game{
+ display:none;
+ flex-direction:column;
+ align-items:center;
+ width:var(--bs);
+ gap:9px;
+}
+
+.card{
+ background:var(--panel);
+ border:1px solid #ffffff0a;
+ border-radius:7px;
+ padding:10px 12px;
+ text-align:center;
+ width:calc(100% - 16px);
+}
+
+#info{
+ color:var(--ac);
+ font-size:13px;
+ visibility:hidden;
+}
+
+.row{
+ display:flex;
+ gap:6px;
+ width:100%;
+}
+
+#board{
+ display:grid;
+ grid-template-columns:repeat(8,var(--sq));
+ grid-template-rows:repeat(8,var(--sq));
+ width:var(--bs);
+ height:var(--bs);
+ flex:none;
+ direction:ltr;
+ border:2px solid #302E2B;
+ box-shadow:0 8px 28px #0005;
+}
+
+.sq{
+ width:var(--sq);
+ height:var(--sq);
+ overflow:hidden;
+ position:relative;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ font-size:calc(var(--sq)*.74);
+ line-height:1;
+ user-select:none;
+ cursor:pointer;
+}
+
+.sq i{font-style:normal}
+.w{color:#fff;text-shadow:0 0 4px #000,0 0 2px #000}
+.b{color:#1a1a1a;text-shadow:0 0 4px #fff,0 0 2px #fff}
+
+.bd{
+ position:absolute;
+ top:3%;
+ right:3%;
+ width:38%;
+ height:38%;
+ border-radius:50%;
+ background:#1BACA6;
+ border:2px solid #fff;
+ color:#fff;
+ font:700 calc(var(--bs)/8*.24)/1 system-ui;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+}
+
+.foot{
+ margin-top:auto;
+ padding:8px 14px;
+ background:var(--panel);
+ border:1px solid #ffffff0a;
+ border-radius:7px;
+ color:var(--mu);
+ font-size:12px;
+}
+
+.foot a{
+ color:var(--ac);
+ font-weight:700;
+ text-decoration:none;
+}
+
+#dlg{
+ position:fixed;
+ inset:0;
+ background:#0009;
+ display:none;
+ align-items:center;
+ justify-content:center;
+ z-index:9;
+ padding:16px;
+}
+
+#dlg div{
+ background:var(--panel);
+ border:1px solid #ffffff12;
+ border-radius:9px;
+ width:min(86vw,320px);
+ padding:9px;
+ box-shadow:0 12px 40px #0008;
+}
+
+#dlg h3{
+ margin:8px 10px;
+ font-size:15px;
+}
+
+#dlg button{
+ display:block;
+ width:100%;
+ text-align:left;
+ padding:13px 12px;
+ border:0;
+ background:none;
+ color:var(--tx);
+ font:inherit;
+ border-radius:6px;
+}
+
+#dlg button:active{
+ background:var(--btn);
+}
+
+@media(max-width:360px){
+ .menu h1{font-size:32px}
+ .menu{width:min(100%,320px)}
+}
 </style>
 </head>
 <body>
